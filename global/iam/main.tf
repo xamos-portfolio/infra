@@ -63,6 +63,13 @@ resource "google_project_iam_member" "security_reviewer" {
   member  = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
+# Workload Identity Pool Viewer (For refreshing WIF metadata)
+resource "google_project_iam_member" "wif_viewer" {
+  project = "xamos-project"
+  role    = "roles/iam.workloadIdentityPoolViewer"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
 # Browser (For resource discovery and metadata visibility)
 resource "google_project_iam_member" "browser" {
   project = "xamos-project"
