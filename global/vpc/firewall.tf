@@ -1,17 +1,16 @@
-# We want to allow SSH traffic from anywhere to the instances within the network
-# https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall
+# Allow SSH traffic ONLY via Identity-Aware Proxy (IAP)
+# https://cloud.google.com/iap/docs/using-tcp-forwarding
 resource "google_compute_firewall" "allow_ssh" {
   name    = "allow-ssh"
   network = google_compute_network.main.name
 
-  # Port 22 is used for SSH
   allow {
     protocol = "tcp"
     ports    = ["22"]
   }
 
-  # Requests from anywhere
-  source_ranges = ["0.0.0.0/0"]
+  # Only allow IAP's IP range
+  source_ranges = ["35.235.240.0/20"]
 }
 
 # We also want to allow communication between the nodes themselves
