@@ -8,7 +8,7 @@ resource "google_kms_key_ring" "tf_state" {
 resource "google_kms_crypto_key" "tf_state_bucket" {
   name            = "xamos-tfstate"
   key_ring        = google_kms_key_ring.tf_state.id
-  rotation_period = "86400s"
+  rotation_period = "7776000s" # 90 Days
 
   # In order to avoid losing access to the state, we prevent destruction of the key
   lifecycle {
@@ -41,6 +41,16 @@ resource "google_storage_bucket" "default" {
   # It is recommended to enable versioning to avoid catastrophic mishaps
   versioning {
     enabled = true
+  }
+
+  # Prevent infinite accumulation of old state versions
+  lifecycle_rule {
+    condition {
+      num_newer_versions = 2
+    }
+    action {
+      type = "Delete"
+    }
   }
 
   # We encrypt the state to secure any sensitive data our state might contain
