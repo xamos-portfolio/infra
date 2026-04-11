@@ -85,3 +85,64 @@ resource "google_storage_bucket_iam_member" "state_admin" {
   role   = "roles/storage.objectUser"
   member = "serviceAccount:${google_service_account.github_actions.email}"
 }
+
+# OIDC Provider for GitHub Actions in AWS
+resource "aws_iam_openid_connect_provider" "github" {
+  url            = "https://token.actions.githubusercontent.com"
+  client_id_list = ["sts.amazonaws.com"]
+}
+
+# IAM Role for GitHub Actions
+resource "aws_iam_role" "github_actions" {
+  name = "github-actions-xamos-portfolio-infra-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.github.arn
+        }
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
+          }
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" : "repo:xamos-portfolio/infra:*"
+          }
+        }
+      }
+    ]
+  })
+}
+
+data "aws_route53_zone" "main" {
+  name = "xamos.org."
+}
+
+# Least-privilege permissions for required Route 53 metadata
+resource "aws_iam_role_policy" "route53_viewer" {
+  name = "route53-metadata-viewer"
+  role = aws_iam_role.github_actions.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "route53:GetHostedZone",
+          "route53:ListResourceRecordSets"
+        ]
+        Resource = data.aws_route53_zone.main.arn
+      },
+      {
+        Effect   = "Allow"
+        Action   = "route53:ListHostedZones"
+        Resource = "*"
+      }
+    ]
+  })
+}

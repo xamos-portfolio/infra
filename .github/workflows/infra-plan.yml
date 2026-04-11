@@ -31,6 +31,12 @@ jobs:
           workload_identity_provider: 'projects/597630476693/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
           service_account: 'github-actions-infra@xamos-project.iam.gserviceaccount.com'
 
+      - name: Authenticate to AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::368476149685:role/github-actions-xamos-portfolio-infra-role
+          aws-region: us-east-1
+
       - name: Setup OpenTofu
         uses: opentofu/setup-opentofu@v1
         with:
