@@ -11,6 +11,7 @@ const path = require('path');
 
 const runId = process.env.GITHUB_RUN_ID;
 const repository = process.env.GITHUB_REPOSITORY;
+const serverUrl = process.env.GITHUB_SERVER_URL || 'https://github.com';
 
 const modules = [
   { id: 'vpc', name: 'global/vpc' },
@@ -22,6 +23,8 @@ let body = `### 🛡️ Infrastructure Plan Summary (Run #${runId})\n\n`;
 
 for (const { id, name } of modules) {
   const summaryPath = path.join('summaries', `summary-${id}`, 'plan_summary.txt');
+  const planPath = path.join('summaries', `plan-${id}`, 'infra.tfplan');
+  const planExists = fs.existsSync(planPath);
   let summary = 'Summary not available.';
 
   if (fs.existsSync(summaryPath)) {
@@ -29,13 +32,20 @@ for (const { id, name } of modules) {
   }
 
   body += `<details>\n`;
-  body += `<summary><b>${name}</b> (Click to expand)</summary>\n\n`;
+  body += `<summary><b>${name}</b> ${planExists ? '✅' : '❌'} (Click to expand)</summary>\n\n`;
   body += `\`\`\`\n${summary}\n\`\`\`\n\n`;
-  body += `**To apply this plan locally:**\n\n`;
-  body += `1. Download the artifact:\n`;
-  body += `\`\`\`bash\ngh run download ${runId} -n plan-${id} -D ${name}\n\`\`\`\n\n`;
-  body += `2. Apply the specific plan:\n`;
-  body += `\`\`\`bash\ncd ${name} && tofu apply infra.tfplan\n\`\`\`\n\n`;
+
+  if (planExists) {
+    body += `**To apply this plan locally:**\n\n`;
+    body += `1. Download the artifact:\n`;
+    body += `\`\`\`bash\ngh run download ${runId} -n plan-${id} -D ${name}\n\`\`\`\n\n`;
+    body += `2. Apply the specific plan:\n`;
+    body += `\`\`\`bash\ncd ${name} && tofu apply infra.tfplan\n\`\`\`\n\n`;
+  } else {
+    const jobUrl = `${serverUrl}/${repository}/actions/runs/${runId}`;
+    body += `❌ **Plan failed.** [View job logs](${jobUrl})\n\n`;
+  }
+
   body += `</details>\n\n`;
 }
 

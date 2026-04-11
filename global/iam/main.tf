@@ -143,6 +143,11 @@ resource "aws_iam_role_policy" "route53_viewer" {
         Effect   = "Allow"
         Action   = "route53:ListHostedZones"
         Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = "iam:GetOpenIDConnectProvider"
+        Resource = aws_iam_openid_connect_provider.github.arn
       }
     ]
   })

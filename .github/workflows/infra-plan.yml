@@ -55,21 +55,20 @@ jobs:
       - name: OpenTofu Plan
         working-directory: ${{ matrix.module }}
         id: plan
-        continue-on-error: true
         run: tofu plan -no-color -out=infra.tfplan
 
       - name: Generate Plan Summary
-        if: steps.plan.outcome == 'success'
+        if: success()
         working-directory: ${{ matrix.module }}
         run: tofu show -no-color infra.tfplan > plan_summary.txt
 
       - name: Generate Error Summary
-        if: steps.plan.outcome == 'failure'
+        if: failure()
         working-directory: ${{ matrix.module }}
-        run: echo "Plan failed. Check logs for details." > plan_summary.txt
+        run: echo "Plan failed. See job logs for details." > plan_summary.txt
 
       - name: Upload Plan Artifact
-        if: steps.plan.outcome == 'success'
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: plan-${{ matrix.id }}
@@ -77,6 +76,7 @@ jobs:
           retention-days: 7
 
       - name: Upload Text Summary
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: summary-${{ matrix.id }}
@@ -87,6 +87,7 @@ jobs:
     name: Report
     runs-on: ubuntu-latest
     needs: [plan]
+    if: always() # Run even if plans failed
     permissions:
       pull-requests: write
 
@@ -94,10 +95,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Download all summaries
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: summary-*
+          pattern: '*'
           path: summaries
 
       - name: Assemble Markdown
