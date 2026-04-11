@@ -4,6 +4,5 @@ provider "google" {
 }
 
 provider "aws" {
-  region  = "us-east-1"
-  profile = "personal"
+  region = "us-east-1"
 }

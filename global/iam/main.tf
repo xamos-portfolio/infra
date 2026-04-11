@@ -134,7 +134,8 @@ resource "aws_iam_role_policy" "route53_viewer" {
         Effect = "Allow"
         Action = [
           "route53:GetHostedZone",
-          "route53:ListResourceRecordSets"
+          "route53:ListResourceRecordSets",
+          "route53:ListTagsForResource"
         ]
         Resource = data.aws_route53_zone.main.arn
       },
