@@ -11,7 +11,7 @@ resource "google_compute_network" "main" {
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork
 resource "google_compute_subnetwork" "private" {
   name                     = "private"
-  ip_cidr_range            = "10.0.0.0/16" # 10.0.0.1 - 10.0.255.254
+  ip_cidr_range            = "10.10.0.0/24" # 10.10.0.1 - 10.10.0.254
   region                   = "us-east1"
   network                  = google_compute_network.main.id
   private_ip_google_access = true
@@ -20,14 +20,14 @@ resource "google_compute_subnetwork" "private" {
   # https://cloud.google.com/kubernetes-engine/docs/concepts/alias-ips
   secondary_ip_range {
     range_name    = "k8s-pod-range"
-    ip_cidr_range = "10.1.0.0/18" # 10.1.0.1 - 10.1.63.254
-    # Total 16,384 IPs for Pods
+    ip_cidr_range = "10.100.0.0/21" # 10.100.0.1 - 10.100.7.254
+    # Total 2,048 IPs for Pods
   }
 
   secondary_ip_range {
     range_name    = "k8s-service-range"
-    ip_cidr_range = "10.4.0.0/18" # 10.4.0.1 - 10.4.63.254
-    # Total 16,384 IPs for Services
+    ip_cidr_range = "10.100.8.0/24" # 10.100.8.1 - 10.100.8.254
+    # Total 254 IPs for Services
   }
 }
 

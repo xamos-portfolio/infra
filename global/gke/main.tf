@@ -98,7 +98,7 @@ resource "google_container_cluster" "main" {
   private_cluster_config {
     enable_private_nodes    = true            # This setting turns the cluster into a private cluster
     enable_private_endpoint = false           # Keeping this as false allows the control plane to be accessible from the internet (namely for kubectl commands from local machine)
-    master_ipv4_cidr_block  = "172.16.0.0/28" # This must be a /28 CIDR range (16 IPs) that does not overlap with any of our other networking blocks
+    master_ipv4_cidr_block  = "172.16.10.0/28" # This must be a /28 CIDR range (16 IPs) that does not overlap with any of our other networking blocks
   }
 }
 
@@ -116,6 +116,8 @@ resource "google_container_node_pool" "dedicated" {
   name       = "dedicated"
   cluster    = google_container_cluster.main.id
   node_count = 1
+
+  max_pods_per_node = 32
 
   management {
     auto_repair  = true
@@ -162,6 +164,8 @@ resource "google_container_node_pool" "dedicated" {
 resource "google_container_node_pool" "spot" {
   name    = "spot"
   cluster = google_container_cluster.main.id
+
+  max_pods_per_node = 32
 
   management {
     auto_repair  = true

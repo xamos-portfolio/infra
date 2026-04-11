@@ -30,5 +30,5 @@ resource "google_compute_firewall" "allow_internal" {
   }
 
   # Requests from other instances
-  source_ranges = ["10.0.0.0/16"]
+  source_ranges = [google_compute_subnetwork.private.ip_cidr_range]
 }
