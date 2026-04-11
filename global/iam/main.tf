@@ -145,9 +145,12 @@ resource "aws_iam_role_policy" "route53_viewer" {
         Resource = "*"
       },
       {
-        Effect   = "Allow"
-        Action   = "iam:GetOpenIDConnectProvider"
-        Resource = aws_iam_openid_connect_provider.github.arn
+        Effect = "Allow"
+        Action = [
+          "iam:GetOpenIDConnectProvider",
+          "iam:GetRole"
+        ]
+        Resource = "*"
       }
     ]
   })
