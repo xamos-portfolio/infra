@@ -149,6 +149,7 @@ resource "aws_iam_role_policy" "route53_viewer" {
         Action = [
           "iam:GetOpenIDConnectProvider",
           "iam:GetRole",
+          "iam:GetRolePolicy",
           "iam:ListRolePolicies"
         ]
         Resource = "*"
