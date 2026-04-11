@@ -70,10 +70,11 @@ resource "google_project_iam_member" "browser" {
   member  = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
-# State File Access (Required to refresh tf state)
+# State File Access (Required to refresh tf state and manage locks)
 # Limited strictly to the xamos-tfstate bucket
-resource "google_storage_bucket_iam_member" "state_viewer" {
+# roles/storage.objectUser provides the necessary permissions to read state and manage .tflock files
+resource "google_storage_bucket_iam_member" "state_admin" {
   bucket = "xamos-tfstate"
-  role   = "roles/storage.objectViewer"
+  role   = "roles/storage.objectUser"
   member = "serviceAccount:${google_service_account.github_actions.email}"
 }
