@@ -150,6 +150,7 @@ resource "aws_iam_role_policy" "route53_viewer" {
           "iam:GetOpenIDConnectProvider",
           "iam:GetRole",
           "iam:GetRolePolicy",
+          "iam:ListAttachedRolePolicies",
           "iam:ListRolePolicies"
         ]
         Resource = "*"
