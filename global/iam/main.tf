@@ -63,6 +63,27 @@ resource "google_project_iam_member" "security_reviewer" {
   member  = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
+# KMS Viewer
+resource "google_project_iam_member" "kms_viewer" {
+  project = "xamos-project"
+  role    = "roles/cloudkms.viewer"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
+# IAM Role Viewer
+resource "google_project_iam_member" "role_viewer" {
+  project = "xamos-project"
+  role    = "roles/iam.roleViewer"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
+# Service Account Viewer
+resource "google_project_iam_member" "sa_viewer" {
+  project = "xamos-project"
+  role    = "roles/iam.serviceAccountViewer"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
 # Workload Identity Pool Viewer (For refreshing WIF metadata)
 resource "google_project_iam_member" "wif_viewer" {
   project = "xamos-project"
