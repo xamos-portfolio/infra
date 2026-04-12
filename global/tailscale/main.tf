@@ -22,7 +22,7 @@ resource "tailscale_federated_identity" "ci" {
   # Trusts the repository directly
   subject = "repo:xamos-portfolio/infra:*"
 
-  scopes = ["devices:core", "logs:read"]
+  scopes = ["devices:core", "logs:read", "auth_keys"]
   tags   = ["tag:ci"]
 }
 
