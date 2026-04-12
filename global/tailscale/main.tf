@@ -14,13 +14,13 @@ resource "google_service_account" "tailscale_router" {
   display_name = "Tailscale Subnet Router"
 }
 
-# Identity for CI Pipeline (GitHub Actions via GCP Service Account)
+# Identity for CI Pipeline (GitHub Actions)
 resource "tailscale_federated_identity" "ci" {
-  description = "GCP Workload Federation for CI Service Account"
-  issuer      = "https://accounts.google.com"
+  description = "GitHub Actions Federation for Infra Repo"
+  issuer      = "https://token.actions.githubusercontent.com"
 
-  # Trusts the service account that GitHub Actions impersonates
-  subject = "principalSet://iam.googleapis.com/projects/${data.google_project.main.number}/serviceAccounts/github-actions-infra@xamos-project.iam.gserviceaccount.com"
+  # Trusts the repository directly
+  subject = "repo:xamos-portfolio/infra:*"
 
   scopes = ["devices:core", "logs:read"]
   tags   = ["tag:ci"]
