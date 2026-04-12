@@ -62,12 +62,28 @@ jobs:
         working-directory: ${{ matrix.module }}
         id: plan
         run: |
-          TAILSCALE_IDENTITY_TOKEN=$(curl -sLS "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api.tailscale.com/${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}" -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" | jq -r '.value')
+          echo "=== Tailscale Debug Info ==="
+          echo "Module: ${{ matrix.module }}"
+          echo "Tailnet: $TAILSCALE_TAILNET"
+          echo "Client ID: $TAILSCALE_OAUTH_CLIENT_ID"
+          
+          # Fetch the raw JWT value
+          RESPONSE=$(curl -sLS "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api.tailscale.com/$TAILSCALE_OAUTH_CLIENT_ID" -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN")
+          TAILSCALE_IDENTITY_TOKEN=$(echo "$RESPONSE" | jq -r '.value')
+          
+          if [ "$TAILSCALE_IDENTITY_TOKEN" == "null" ] || [ -z "$TAILSCALE_IDENTITY_TOKEN" ]; then
+            echo "ERROR: Failed to fetch OIDC token. Response: $RESPONSE"
+            exit 1
+          fi
+          
+          echo "Token Length: ${#TAILSCALE_IDENTITY_TOKEN}"
           echo "::add-mask::$TAILSCALE_IDENTITY_TOKEN"
           export TAILSCALE_IDENTITY_TOKEN
+          
           tofu plan -no-color -out=infra.tfplan
         env:
           TAILSCALE_OAUTH_CLIENT_ID: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          TAILSCALE_TAILNET: 'fenrir-trout.ts.net'
 
       - name: Generate Plan Summary
         if: success()
