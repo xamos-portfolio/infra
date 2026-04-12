@@ -1,4 +1,6 @@
 # Since the VPC is managed as independent state, we first query GCP for the network and subnet
+data "google_project" "main" {}
+
 data "google_compute_network" "main" {
   name = "main"
 }
@@ -83,7 +85,7 @@ resource "google_container_cluster" "main" {
   # https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity
   workload_identity_config {
     # <project-id>.svc.id.goog
-    workload_pool = "xamos-project.svc.id.goog"
+    workload_pool = "${data.google_project.main.project_id}.svc.id.goog"
   }
 
   # Leverage the secondary IP ranges of our subnet for VPC-native cluster
@@ -96,9 +98,17 @@ resource "google_container_cluster" "main" {
   # And restrict access to the outside internet
   # https://cloud.google.com/kubernetes-engine/docs/concepts/private-cluster-concept
   private_cluster_config {
-    enable_private_nodes    = true            # This setting turns the cluster into a private cluster
-    enable_private_endpoint = false           # Keeping this as false allows the control plane to be accessible from the internet (namely for kubectl commands from local machine)
+    enable_private_nodes    = true             # This setting turns the cluster into a private cluster
+    enable_private_endpoint = false            # Keeping this as false allows the control plane to be accessible from the internet (namely for kubectl commands from local machine)
     master_ipv4_cidr_block  = "172.16.10.0/28" # This must be a /28 CIDR range (16 IPs) that does not overlap with any of our other networking blocks
+  }
+
+  # Restrict the API server to the Tailscale subnet
+  master_authorized_networks_config {
+    cidr_blocks {
+      cidr_block   = "100.64.0.0/10" # Tailscale subnet
+      display_name = "Tailscale"
+    }
   }
 }
 
@@ -135,6 +145,14 @@ resource "google_container_node_pool" "dedicated" {
 
     labels = {
       role = "dedicated"
+    }
+
+    workload_metadata_config {
+      mode = "GKE_METADATA"
+    }
+
+    metadata = {
+      disable-legacy-endpoints = "true"
     }
 
     service_account = google_service_account.kubernetes.email
@@ -183,6 +201,14 @@ resource "google_container_node_pool" "spot" {
 
     labels = {
       role = "spot"
+    }
+
+    workload_metadata_config {
+      mode = "GKE_METADATA"
+    }
+
+    metadata = {
+      disable-legacy-endpoints = "true"
     }
 
     service_account = google_service_account.kubernetes.email
