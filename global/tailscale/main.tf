@@ -54,6 +54,7 @@ resource "google_compute_instance" "tailscale_router" {
     subnetwork = data.google_compute_subnetwork.private.name
   }
 
+  # trivy:ignore:GCP-0043 - IP forwarding is required for the Subnet Router
   can_ip_forward = true
   service_account {
     email  = google_service_account.tailscale_router.email

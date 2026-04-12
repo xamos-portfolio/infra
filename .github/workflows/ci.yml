@@ -59,10 +59,10 @@ jobs:
           aws-region: us-east-1
 
       - name: Setup Tailscale
-        uses: tailscale/github-action@v2
+        uses: tailscale/github-action@v4
         with:
           oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
-          oauth-secret: "ts-oidc:${{ steps.tailscale-auth.outputs.id_token }}"
+          audience: 'https://tailscale.com/597630476693'
           tags: tag:ci
 
       - name: Setup OpenTofu
