@@ -42,6 +42,12 @@ jobs:
           workload_identity_provider: 'projects/597630476693/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
           service_account: 'github-actions-infra@xamos-project.iam.gserviceaccount.com'
 
+      - name: Authenticate to AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::368476149685:role/github-actions-xamos-portfolio-infra-role
+          aws-region: us-east-1
+
       - name: Setup Tailscale
         uses: tailscale/github-action@v4
         with:
@@ -62,21 +68,7 @@ jobs:
         working-directory: ${{ matrix.module }}
         id: plan
         run: |
-          echo "=== Tailscale Debug Info ==="
-          echo "Module: ${{ matrix.module }}"
-          echo "Tailnet: $TAILSCALE_TAILNET"
-          echo "Client ID: $TAILSCALE_OAUTH_CLIENT_ID"
-          
-          # Fetch the raw JWT value
-          RESPONSE=$(curl -sLS "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api.tailscale.com/$TAILSCALE_OAUTH_CLIENT_ID" -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN")
-          TAILSCALE_IDENTITY_TOKEN=$(echo "$RESPONSE" | jq -r '.value')
-          
-          if [ "$TAILSCALE_IDENTITY_TOKEN" == "null" ] || [ -z "$TAILSCALE_IDENTITY_TOKEN" ]; then
-            echo "ERROR: Failed to fetch OIDC token. Response: $RESPONSE"
-            exit 1
-          fi
-          
-          echo "Token Length: ${#TAILSCALE_IDENTITY_TOKEN}"
+          TAILSCALE_IDENTITY_TOKEN=$(curl -sLS "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api.tailscale.com/$TAILSCALE_OAUTH_CLIENT_ID" -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" | jq -r '.value')
           echo "::add-mask::$TAILSCALE_IDENTITY_TOKEN"
           export TAILSCALE_IDENTITY_TOKEN
           
