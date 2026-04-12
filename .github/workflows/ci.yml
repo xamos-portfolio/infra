@@ -26,16 +26,31 @@ jobs:
             id: gke
           - module: global/iam
             id: iam
+          - module: global/tailscale
+            id: tailscale
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Authenticate to GCP
+        id: auth
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: 'projects/597630476693/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
           service_account: 'github-actions-infra@xamos-project.iam.gserviceaccount.com'
+
+      - name: Get Tailscale OIDC Token
+        id: tailscale-auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/597630476693/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
+          service_account: 'github-actions-infra@xamos-project.iam.gserviceaccount.com'
+          token_format: 'id_token'
+          id_token_audience: 'https://tailscale.com/597630476693'
+          id_token_include_email: true
+          export_environment_variables: false
+          create_credentials_file: false
 
       - name: Authenticate to AWS
         uses: aws-actions/configure-aws-credentials@v4
@@ -43,10 +58,12 @@ jobs:
           role-to-assume: arn:aws:iam::368476149685:role/github-actions-xamos-portfolio-infra-role
           aws-region: us-east-1
 
-      # - name: Setup Tailscale
-      #   uses: tailscale/github-action@v2
-      #   with:
-      #     authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+      - name: Setup Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          oauth-secret: "ts-oidc:${{ steps.tailscale-auth.outputs.id_token }}"
+          tags: tag:ci
 
       - name: Setup OpenTofu
         uses: opentofu/setup-opentofu@v1
@@ -61,6 +78,9 @@ jobs:
         working-directory: ${{ matrix.module }}
         id: plan
         run: tofu plan -no-color -out=infra.tfplan
+        env:
+          TAILSCALE_OAUTH_CLIENT_ID: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          TAILSCALE_IDENTITY_TOKEN: ${{ steps.tailscale-auth.outputs.id_token }}
 
       - name: Generate Plan Summary
         if: success()
