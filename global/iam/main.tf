@@ -108,10 +108,10 @@ resource "google_storage_bucket_iam_member" "state_admin" {
 }
 
 # Bucket Metadata Access (Required to read bucket configuration during plan)
-# roles/storage.objectViewer provides bucket-level 'get' and 'list' permissions
-resource "google_storage_bucket_iam_member" "bucket_viewer" {
+# roles/storage.legacyBucketReader provides 'storage.buckets.get' permission
+resource "google_storage_bucket_iam_member" "bucket_reader" {
   bucket = "xamos-tfstate"
-  role   = "roles/storage.objectViewer"
+  role   = "roles/storage.legacyBucketReader"
   member = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
