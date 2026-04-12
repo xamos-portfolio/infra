@@ -22,7 +22,12 @@ resource "tailscale_federated_identity" "ci" {
   # Trusts the repository directly
   subject = "repo:xamos-portfolio/infra:*"
 
-  scopes = ["devices:core", "logs:read", "auth_keys"]
+  # Scopes: 
+  # - devices:core (join tailnet)
+  # - logs:read (audit logs)
+  # - auth_keys (generate runner keys)
+  # - federated_keys:read (read-only access to Tailscale federated identities)
+  scopes = ["devices:core", "logs:read", "auth_keys", "federated_keys:read"]
   tags   = ["tag:ci"]
 }
 

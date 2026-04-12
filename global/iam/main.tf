@@ -107,6 +107,14 @@ resource "google_storage_bucket_iam_member" "state_admin" {
   member = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
+# Bucket Metadata Access (Required to read bucket configuration during plan)
+# roles/storage.objectViewer provides bucket-level 'get' and 'list' permissions
+resource "google_storage_bucket_iam_member" "bucket_viewer" {
+  bucket = "xamos-tfstate"
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
 # OIDC Provider for GitHub Actions in AWS
 resource "aws_iam_openid_connect_provider" "github" {
   url            = "https://token.actions.githubusercontent.com"
