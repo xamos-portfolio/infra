@@ -48,9 +48,9 @@ resource "google_compute_firewall" "cert_manager_webhook" {
   # Requests from the cluster api server
   # https://cloud.google.com/kubernetes-engine/docs/how-to/private-clusters#add_firewall_rules
   # This can also be found manually with `gcloud container clusters describe <cluster-name> --location=<location> --format="yaml(network, privateClusterConfig)"`
-  source_ranges = [google_container_cluster.main.private_cluster_config.0.private_endpoint]
+  source_ranges = [data.google_container_cluster.main.private_cluster_config.0.private_endpoint]
 
-  target_tags = ["gke-${google_container_cluster.main.name}-node"]
+  target_tags = ["gke-${data.google_container_cluster.main.name}-node"]
 }
 
 # We then need to create our issuer
