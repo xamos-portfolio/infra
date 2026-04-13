@@ -64,7 +64,7 @@ jobs:
 
       - name: OpenTofu Init
         working-directory: ${{ matrix.module }}
-        run: tofu init -lockfile=readonly 2> >(tee init_error.txt >&2)
+        run: tofu init -no-color -lockfile=readonly 2> >(tee init_error.txt >&2)
 
       - name: OpenTofu Plan
         working-directory: ${{ matrix.module }}
