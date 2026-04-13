@@ -6,8 +6,6 @@ data "google_container_cluster" "main" {
   location = "us-east1-b"
 }
 
-data "google_client_config" "current" {}
-
 # The autoscaling profile for the cluster is not sufficient to autoscale to zero
 # due to certain system resources being required to be always available
 # In order to fix this we must make some modifications
