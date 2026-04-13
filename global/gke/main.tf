@@ -99,7 +99,7 @@ resource "google_container_cluster" "main" {
   # https://cloud.google.com/kubernetes-engine/docs/concepts/private-cluster-concept
   private_cluster_config {
     enable_private_nodes    = true             # This setting turns the cluster into a private cluster
-    enable_private_endpoint = false            # Keeping this as false allows the control plane to be accessible from the internet (namely for kubectl commands from local machine)
+    enable_private_endpoint = true             # Secured: only accessible via internal network
     master_ipv4_cidr_block  = "172.16.10.0/28" # This must be a /28 CIDR range (16 IPs) that does not overlap with any of our other networking blocks
   }
 
@@ -217,45 +217,4 @@ resource "google_container_node_pool" "spot" {
     disk_size_gb = 30
     disk_type    = "pd-standard"
   }
-}
-
-# The autoscaling profile for the cluster is not sufficient to autoscale to zero
-# due to certain system resources being required to be always available
-# In order to fix this we must make some modifications
-
-# The first thing we need to do is override the 'preventSinglePointFailure' field
-# in the kube-dns-autoscaler config map in the kube-system namespace to false
-# It defaults to true, and we don't care about keeping the higher availability
-# We instead prefer to allow evicting these pods
-
-# First we need to fetch the current contents of the config map
-data "kubernetes_config_map" "kube_dns_autoscaler" {
-  metadata {
-    name      = "kube-dns-autoscaler"
-    namespace = "kube-system"
-  }
-
-  depends_on = [google_container_cluster.main]
-}
-
-# Then we override it by adjusting its contents
-resource "kubernetes_config_map_v1_data" "prevent_single_point_failure" {
-  metadata {
-    name      = "kube-dns-autoscaler"
-    namespace = "kube-system"
-  }
-
-  # This section is a little messy but it is needed
-  # due to the way the config map is structured
-  # Instead of using different fields, it stores multiple values
-  # as a single JSON string
-  data = {
-    linear = jsonencode(
-      merge(
-        jsondecode(data.kubernetes_config_map.kube_dns_autoscaler.data["linear"]),
-        { preventSinglePointFailure = false }
-    ))
-  }
-
-  force = true # We have to use the force flag to override the control from cluster-autoscaler
 }
