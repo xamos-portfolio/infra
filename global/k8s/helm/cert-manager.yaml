@@ -1,0 +1,8 @@
+prometheus:
+  enabled: false # Disable monitoring for now
+tolerations:
+- key: "components.gke.io/gke-managed-components" # Enable cert-manager to run in the dedicated node pool
+  operator: "Equal"
+  value: "true"
+  effect: "NoSchedule"
+installCRDs: true

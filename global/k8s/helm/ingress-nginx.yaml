@@ -1,0 +1,11 @@
+controller:
+  # service:
+    # targetPorts:
+      # https: http # We will eventually support TLS Termination
+  ingressClassResource:
+    default: true # Set the nginx-controller as the default ingress controller
+  tolerations:
+  - key: "components.gke.io/gke-managed-components" # Enable the ingress-controller to run in the dedicated node pool
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
