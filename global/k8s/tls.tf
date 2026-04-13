@@ -33,6 +33,11 @@ data "kubernetes_service" "cert_manager_webhook" {
   depends_on = [helm_release.cert_manager] # The service only exists if the helm chart is deployed
 }
 
+# And the network which our cluster resides in
+data "google_compute_network" "main" {
+  name = "main"
+}
+
 # Then we create the firewall rule
 resource "google_compute_firewall" "cert_manager_webhook" {
   name    = "cert-manager-webhook"
