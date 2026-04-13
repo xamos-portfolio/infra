@@ -4,6 +4,7 @@
 provider "registry.opentofu.org/hashicorp/google" {
   version = "7.27.0"
   hashes = [
+    "h1:2tb0++zy9DqqzI1MXE/QZmGcqQI22D0PynXhdfnfpBA=",
     "h1:WKoTmVlMaQyN1cP3KHrUrW5qIZnpUcPN/indgSUv7A8=",
     "zh:096cae531aab3c01d68b9bc63d614604a8fd6bd0653979efd3209f539e1b4058",
     "zh:128ff6f3d2c7bfc26a5a00cadeca64268746f9c614cf594671a4e736087f1b60",
