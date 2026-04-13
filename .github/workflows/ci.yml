@@ -64,7 +64,7 @@ jobs:
 
       - name: OpenTofu Init
         working-directory: ${{ matrix.module }}
-        run: tofu init
+        run: tofu init 2> init_error.txt
 
       - name: OpenTofu Plan
         working-directory: ${{ matrix.module }}
@@ -74,7 +74,7 @@ jobs:
           echo "::add-mask::$TAILSCALE_IDENTITY_TOKEN"
           export TAILSCALE_IDENTITY_TOKEN
           
-          tofu plan -no-color -out=infra.tfplan
+          tofu plan -no-color -out=infra.tfplan 2> plan_error.txt
         env:
           TAILSCALE_OAUTH_CLIENT_ID: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
           TAILSCALE_TAILNET: 'fenrir-trout.ts.net'
@@ -87,7 +87,15 @@ jobs:
       - name: Generate Error Summary
         if: failure()
         working-directory: ${{ matrix.module }}
-        run: echo "Plan failed. See job logs for details." > plan_summary.txt
+        run: |
+          if [ -f init_error.txt ] && [ -s init_error.txt ]; then
+            cat init_error.txt > plan_summary.txt
+          elif [ -f plan_error.txt ] && [ -s plan_error.txt ]; then
+            cat plan_error.txt > plan_summary.txt
+          else
+            echo "Plan failed with an unknown error." > plan_summary.txt
+          fi
+          echo -e "\nSee job logs for full details." >> plan_summary.txt
 
       - name: Upload Plan Artifact
         if: success()
