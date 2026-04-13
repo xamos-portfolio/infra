@@ -9,9 +9,22 @@ data "google_compute_subnetwork" "private" {
   region = "us-east1"
 }
 
+data "google_container_cluster" "main" {
+  name     = "main"
+  location = "us-east1-b"
+}
+
 resource "google_service_account" "tailscale_router" {
   account_id   = "tailscale-router"
   display_name = "Tailscale Subnet Router"
+}
+
+# Allow the service account to mint OIDC tokens for itself
+# This is required for Workload Identity Federation to work on the VM
+resource "google_service_account_iam_member" "tailscale_router_token_creator" {
+  service_account_id = google_service_account.tailscale_router.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${google_service_account.tailscale_router.email}"
 }
 
 # Identity for CI Pipeline (GitHub Actions)
@@ -39,7 +52,7 @@ resource "tailscale_federated_identity" "router" {
   # Trusts the service account attached to the VM
   subject = google_service_account.tailscale_router.unique_id
 
-  scopes = ["devices:core"]
+  scopes = ["devices:core", "auth_keys"]
   tags   = ["tag:router"]
 }
 
@@ -77,17 +90,20 @@ resource "google_compute_instance" "tailscale_router" {
     echo 'net.ipv6.conf.all.forwarding = 1' | tee -a /etc/sysctl.d/99-tailscale.conf
     sysctl -p /etc/sysctl.d/99-tailscale.conf
 
-    CLIENT_ID=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/metadata/tailscale-client-id")
-
+    CLIENT_ID=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/attributes/tailscale-client-id")
+    
     tailscale up \
       --client-id="$CLIENT_ID" \
       --audience="api.tailscale.com/$CLIENT_ID" \
-      --advertise-routes="10.10.0.0/24" \
+      --advertise-routes="${data.google_compute_subnetwork.private.ip_cidr_range},${data.google_container_cluster.main.private_cluster_config.0.master_ipv4_cidr_block}" \
       --advertise-tags="tag:router" \
       --accept-routes
   EOF
 
-  depends_on = [tailscale_federated_identity.router]
+  depends_on = [
+    tailscale_federated_identity.router,
+    google_service_account_iam_member.tailscale_router_token_creator
+  ]
 }
 
 output "tailscale_ci_federated_client_id" {
