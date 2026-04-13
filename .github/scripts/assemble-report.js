@@ -35,22 +35,29 @@ for (const { id, name } of modules) {
     summary = fs.readFileSync(summaryPath, 'utf8').trim();
   }
 
-  body += `<details>\n`;
-  body += `<summary><b>${name}</b> ${planExists ? '✅' : '❌'} (Click to expand)</summary>\n\n`;
-  body += `\`\`\`\n${summary}\n\`\`\`\n\n`;
+  const hasChanges = !summary.includes('No changes. Your infrastructure matches the configuration.');
+  const statusIcon = planExists ? '✅' : '❌';
 
-  if (planExists) {
-    body += `**To apply this plan locally:**\n\n`;
-    body += `1. Download the artifact:\n`;
-    body += `\`\`\`bash\ngh run download ${runId} -n plan-${id} -D ${name}\n\`\`\`\n\n`;
-    body += `2. Apply the specific plan:\n`;
-    body += `\`\`\`bash\ncd ${name} && tofu apply infra.tfplan\n\`\`\`\n\n`;
+  if (!planExists || hasChanges) {
+    // Include full details for failures or modules with changes
+    body += `<details>\n`;
+    body += `<summary><b>${name}</b> ${statusIcon} (Click to expand)</summary>\n\n`;
+    body += `\`\`\`\n${summary}\n\`\`\`\n\n`;
+
+    if (planExists) {
+      body += `**To apply this plan locally:**\n\n`;
+      body += `1. Download the artifact:\n`;
+      body += `\`\`\`bash\ngh run download ${runId} -n plan-${id} -D ${name}\n\`\`\`\n\n`;
+      body += `2. Apply the specific plan:\n`;
+      body += `\`\`\`bash\ncd ${name} && tofu apply infra.tfplan\n\`\`\`\n\n`;
+    } else {
+      const jobUrl = `${serverUrl}/${repository}/actions/runs/${runId}`;
+      body += `❌ **Plan failed.** [View job logs](${jobUrl})\n\n`;
+    }
+    body += `</details>\n\n`;
   } else {
-    const jobUrl = `${serverUrl}/${repository}/actions/runs/${runId}`;
-    body += `❌ **Plan failed.** [View job logs](${jobUrl})\n\n`;
+    body += `* **${name}** ${statusIcon} (No changes)\n\n`;
   }
-
-  body += `</details>\n\n`;
 }
 
 body += `#### Security Audit (Trivy)\n\n`;
