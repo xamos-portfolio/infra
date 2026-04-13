@@ -17,8 +17,9 @@ const modules = [
   { id: 'backend', name: 'global/backend' },
   { id: 'vpc', name: 'global/vpc' },
   { id: 'iam', name: 'global/iam' },
-  { id: 'gke', name: 'global/gke' },
   { id: 'tailscale', name: 'global/tailscale' },
+  { id: 'gke', name: 'global/gke' },
+  { id: 'k8s', name: 'global/k8s' },
 ];
 
 let body = `### CI Report (Run #${runId})\n\n`;

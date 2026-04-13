@@ -26,10 +26,12 @@ jobs:
             id: vpc
           - module: global/iam
             id: iam
-          - module: global/gke
-            id: gke
           - module: global/tailscale
             id: tailscale
+          - module: global/gke
+            id: gke
+          - module: global/k8s
+            id: k8s
 
     steps:
       - name: Checkout Code
