@@ -78,9 +78,13 @@ resource "google_compute_instance" "tailscale_router" {
     sysctl -p /etc/sysctl.d/99-tailscale.conf
 
     CLIENT_ID=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/metadata/tailscale-client-id")
-    TOKEN=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=api.tailscale.com/$CLIENT_ID")
 
-    tailscale up --authkey="ts-oidc:$TOKEN" --advertise-routes="10.10.0.0/24" --accept-routes
+    tailscale up \
+      --client-id="$CLIENT_ID" \
+      --audience="api.tailscale.com/$CLIENT_ID" \
+      --advertise-routes="10.10.0.0/24" \
+      --advertise-tags="tag:router" \
+      --accept-routes
   EOF
 
   depends_on = [tailscale_federated_identity.router]
