@@ -64,7 +64,7 @@ jobs:
 
       - name: OpenTofu Init
         working-directory: ${{ matrix.module }}
-        run: tofu init -lockfile=readonly 2> init_error.txt
+        run: tofu init -no-color -lockfile=readonly 2> >(tee init_error.txt >&2)
 
       - name: OpenTofu Plan
         working-directory: ${{ matrix.module }}
@@ -74,7 +74,7 @@ jobs:
           echo "::add-mask::$TAILSCALE_IDENTITY_TOKEN"
           export TAILSCALE_IDENTITY_TOKEN
           
-          tofu plan -no-color -out=infra.tfplan 2> plan_error.txt
+          tofu plan -no-color -out=infra.tfplan 2> >(tee plan_error.txt >&2)
         env:
           TAILSCALE_OAUTH_CLIENT_ID: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
           TAILSCALE_TAILNET: 'fenrir-trout.ts.net'

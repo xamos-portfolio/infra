@@ -33,6 +33,11 @@ data "kubernetes_service" "cert_manager_webhook" {
   depends_on = [helm_release.cert_manager] # The service only exists if the helm chart is deployed
 }
 
+# And the network which our cluster resides in
+data "google_compute_network" "main" {
+  name = "main"
+}
+
 # Then we create the firewall rule
 resource "google_compute_firewall" "cert_manager_webhook" {
   name    = "cert-manager-webhook"
@@ -48,9 +53,9 @@ resource "google_compute_firewall" "cert_manager_webhook" {
   # Requests from the cluster api server
   # https://cloud.google.com/kubernetes-engine/docs/how-to/private-clusters#add_firewall_rules
   # This can also be found manually with `gcloud container clusters describe <cluster-name> --location=<location> --format="yaml(network, privateClusterConfig)"`
-  source_ranges = [google_container_cluster.main.private_cluster_config.0.private_endpoint]
+  source_ranges = [data.google_container_cluster.main.private_cluster_config.0.private_endpoint]
 
-  target_tags = ["gke-${google_container_cluster.main.name}-node"]
+  target_tags = ["gke-${data.google_container_cluster.main.name}-node"]
 }
 
 # We then need to create our issuer

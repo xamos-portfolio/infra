@@ -8,8 +8,8 @@ data "aws_route53_zone" "source" {
 }
 
 # Fetch the IP address of the Load Balancer
-# https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/data-sources/service
-data "kubernetes_service" "ingress_controller" {
+# https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/data-sources/service_v1
+data "kubernetes_service_v1" "ingress_controller" {
   metadata {
     name      = "${helm_release.ingress.name}-${helm_release.ingress.chart}-controller"
     namespace = helm_release.ingress.namespace
@@ -50,13 +50,13 @@ resource "google_dns_record_set" "game" {
   managed_zone = google_dns_managed_zone.game.name
 
   rrdatas = [
-    data.kubernetes_service.ingress_controller.status.0.load_balancer.0.ingress.0.ip
+    data.kubernetes_service_v1.ingress_controller.status.0.load_balancer.0.ingress.0.ip
   ]
 }
 
 # Create the actual demo application
-# https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/deployment
-resource "kubernetes_deployment" "game" {
+# https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/deployment_v1
+resource "kubernetes_deployment_v1" "game" {
   metadata {
     name = "game"
   }
@@ -113,8 +113,8 @@ resource "kubernetes_deployment" "game" {
   }
 }
 
-# https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service
-resource "kubernetes_service" "game" {
+# https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_v1
+resource "kubernetes_service_v1" "game" {
   metadata {
     name = "game"
   }
