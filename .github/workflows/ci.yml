@@ -20,18 +20,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - module: global/backend
+            id: backend
           - module: global/vpc
             id: vpc
-          - module: global/gke
-            id: gke
           - module: global/iam
             id: iam
+          - module: global/gke
+            id: gke
+          - module: global/tailscale
+            id: tailscale
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Authenticate to GCP
+        id: auth
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: 'projects/597630476693/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider'
@@ -43,10 +48,12 @@ jobs:
           role-to-assume: arn:aws:iam::368476149685:role/github-actions-xamos-portfolio-infra-role
           aws-region: us-east-1
 
-      # - name: Setup Tailscale
-      #   uses: tailscale/github-action@v2
-      #   with:
-      #     authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+      - name: Setup Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          audience: 'api.tailscale.com/${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}'
+          tags: tag:ci
 
       - name: Setup OpenTofu
         uses: opentofu/setup-opentofu@v1
@@ -60,7 +67,15 @@ jobs:
       - name: OpenTofu Plan
         working-directory: ${{ matrix.module }}
         id: plan
-        run: tofu plan -no-color -out=infra.tfplan
+        run: |
+          TAILSCALE_IDENTITY_TOKEN=$(curl -sLS "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api.tailscale.com/$TAILSCALE_OAUTH_CLIENT_ID" -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" | jq -r '.value')
+          echo "::add-mask::$TAILSCALE_IDENTITY_TOKEN"
+          export TAILSCALE_IDENTITY_TOKEN
+          
+          tofu plan -no-color -out=infra.tfplan
+        env:
+          TAILSCALE_OAUTH_CLIENT_ID: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          TAILSCALE_TAILNET: 'fenrir-trout.ts.net'
 
       - name: Generate Plan Summary
         if: success()

@@ -63,6 +63,27 @@ resource "google_project_iam_member" "security_reviewer" {
   member  = "serviceAccount:${google_service_account.github_actions.email}"
 }
 
+# KMS Viewer
+resource "google_project_iam_member" "kms_viewer" {
+  project = "xamos-project"
+  role    = "roles/cloudkms.viewer"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
+# IAM Role Viewer
+resource "google_project_iam_member" "role_viewer" {
+  project = "xamos-project"
+  role    = "roles/iam.roleViewer"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
+# Service Account Viewer
+resource "google_project_iam_member" "sa_viewer" {
+  project = "xamos-project"
+  role    = "roles/iam.serviceAccountViewer"
+  member  = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
 # Workload Identity Pool Viewer (For refreshing WIF metadata)
 resource "google_project_iam_member" "wif_viewer" {
   project = "xamos-project"
@@ -83,6 +104,14 @@ resource "google_project_iam_member" "browser" {
 resource "google_storage_bucket_iam_member" "state_admin" {
   bucket = "xamos-tfstate"
   role   = "roles/storage.objectUser"
+  member = "serviceAccount:${google_service_account.github_actions.email}"
+}
+
+# Bucket Metadata Access (Required to read bucket configuration during plan)
+# roles/storage.legacyBucketReader provides 'storage.buckets.get' permission
+resource "google_storage_bucket_iam_member" "bucket_reader" {
+  bucket = "xamos-tfstate"
+  role   = "roles/storage.legacyBucketReader"
   member = "serviceAccount:${google_service_account.github_actions.email}"
 }
 

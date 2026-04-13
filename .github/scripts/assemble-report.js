@@ -14,9 +14,11 @@ const repository = process.env.GITHUB_REPOSITORY;
 const serverUrl = process.env.GITHUB_SERVER_URL || 'https://github.com';
 
 const modules = [
+  { id: 'backend', name: 'global/backend' },
   { id: 'vpc', name: 'global/vpc' },
-  { id: 'gke', name: 'global/gke' },
   { id: 'iam', name: 'global/iam' },
+  { id: 'gke', name: 'global/gke' },
+  { id: 'tailscale', name: 'global/tailscale' },
 ];
 
 let body = `### CI Report (Run #${runId})\n\n`;
