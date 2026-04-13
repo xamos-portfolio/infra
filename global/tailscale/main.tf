@@ -66,6 +66,10 @@ resource "google_compute_instance" "tailscale_router" {
     scopes = ["cloud-platform"]
   }
 
+  metadata = {
+    tailscale-client-id = tailscale_federated_identity.router.id
+  }
+
   metadata_startup_script = <<-EOF
     #!/bin/bash
     curl -fsSL https://tailscale.com/install.sh | sh
@@ -73,8 +77,8 @@ resource "google_compute_instance" "tailscale_router" {
     echo 'net.ipv6.conf.all.forwarding = 1' | tee -a /etc/sysctl.d/99-tailscale.conf
     sysctl -p /etc/sysctl.d/99-tailscale.conf
 
-    PROJECT_NUM=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/project/numeric-project-id")
-    TOKEN=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=https://tailscale.com/$PROJECT_NUM")
+    CLIENT_ID=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/metadata/tailscale-client-id")
+    TOKEN=$(curl -s -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=api.tailscale.com/$CLIENT_ID")
 
     tailscale up --authkey="ts-oidc:$TOKEN" --advertise-routes="10.10.0.0/24" --accept-routes
   EOF
