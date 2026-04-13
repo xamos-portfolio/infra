@@ -16,7 +16,7 @@ data "google_container_cluster" "main" {
 # We instead prefer to allow evicting these pods
 
 # First we need to fetch the current contents of the config map
-data "kubernetes_config_map" "kube_dns_autoscaler" {
+data "kubernetes_config_map_v1" "kube_dns_autoscaler" {
   metadata {
     name      = "kube-dns-autoscaler"
     namespace = "kube-system"
@@ -39,7 +39,7 @@ resource "kubernetes_config_map_v1_data" "prevent_single_point_failure" {
   data = {
     linear = jsonencode(
       merge(
-        jsondecode(data.kubernetes_config_map.kube_dns_autoscaler.data["linear"]),
+        jsondecode(data.kubernetes_config_map_v1.kube_dns_autoscaler.data["linear"]),
         { preventSinglePointFailure = false }
     ))
   }

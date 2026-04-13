@@ -29,14 +29,15 @@ resource "google_container_cluster" "main" {
   network    = data.google_compute_network.main.name
   subnetwork = data.google_compute_subnetwork.main.name
 
-  # These settings are all the default values for now
-  logging_service    = "logging.googleapis.com/kubernetes"
-  monitoring_service = "monitoring.googleapis.com/kubernetes"
-  networking_mode    = "VPC_NATIVE"
+  networking_mode = "VPC_NATIVE"
 
   # We intend to manage our node_pools separately, so we remove the default node pool
   remove_default_node_pool = true
   initial_node_count       = 1 # It will be removed, so it is as small as possible
+
+  # We want to be able to tear down the cluster when the project is not in use
+  # The project doesn't have any uptime/availability requirements, just as a personal project
+  deletion_protection = false
 
   addons_config {
     # We don't want the default Load Balancer Controller addon
