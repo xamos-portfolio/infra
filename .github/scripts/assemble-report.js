@@ -47,7 +47,7 @@ for (const { id, name } of modules) {
     if (planExists) {
       body += `**To apply this plan locally:**\n\n`;
       body += `1. Download the artifact:\n`;
-      body += `\`\`\`bash\ngh run download ${runId} -n plan-${id} -D ${name}\n\`\`\`\n\n`;
+      body += `\`\`\`bash\nrm -f ${name}/infra.tfplan && gh run download ${runId} -n plan-${id} -D ${name}\n\`\`\`\n\n`;
       body += `2. Apply the specific plan:\n`;
       body += `\`\`\`bash\ncd ${name} && tofu apply infra.tfplan\n\`\`\`\n\n`;
     } else {

@@ -37,7 +37,7 @@ resource "tailscale_federated_identity" "router" {
   issuer      = "https://accounts.google.com"
 
   # Trusts the service account attached to the VM
-  subject = "principalSet://iam.googleapis.com/projects/${data.google_project.main.number}/serviceAccounts/${google_service_account.tailscale_router.email}"
+  subject = google_service_account.tailscale_router.unique_id
 
   scopes = ["devices:core"]
   tags   = ["tag:router"]
